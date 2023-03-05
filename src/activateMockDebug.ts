@@ -128,7 +128,8 @@ export function activateMockDebug(context: vscode.ExtensionContext, factory?: vs
 
 			for (let l = viewport.start.line; l <= context.stoppedLocation.end.line; l++) {
 				const line = document.lineAt(l);
-				var regExp = /\$([a-z][a-z0-9]*)/ig;	// variables are words starting with '$'
+				// var regExp = /\$([a-z][a-z0-9]*)/ig; // variables are words starting with '$' // Original
+				var regExp = /\$?([a-z][a-z0-9]*)/ig; // variables are words starting with '$'
 				do {
 					var m = regExp.exec(line.text);
 					if (m) {

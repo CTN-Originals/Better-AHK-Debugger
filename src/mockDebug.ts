@@ -22,6 +22,7 @@ import { basename } from 'path-browserify';
 import { MockRuntime, IRuntimeBreakpoint, FileAccessor, RuntimeVariable, timeout, IRuntimeVariableType } from './mockRuntime';
 import { Subject } from 'await-notify';
 import * as base64 from 'base64-js';
+import { Socket } from 'node:net';
 
 /**
  * This interface describes the mock-debug specific launch attributes
@@ -46,6 +47,13 @@ interface IAttachRequestArguments extends ILaunchRequestArguments { }
 
 
 export class MockDebugSession extends LoggingDebugSession {
+	[x: string]: any;
+	setRunAsServer(arg0: boolean) {
+		throw new Error('Method not implemented.');
+	}
+	start(arg0: NodeJS.ReadableStream, socket: Socket) {
+		throw new Error('Method not implemented.');
+	}
 
 	// we don't support multiple threads, so we can use a hardcoded ID for the default thread
 	private static threadID = 1;

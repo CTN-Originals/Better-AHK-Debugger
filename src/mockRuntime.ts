@@ -553,25 +553,28 @@ export class MockRuntime extends EventEmitter {
 		const line = this.getLine(ln);
 
 		// find variable accesses
-		let reg0 = /\$([a-z][a-z0-9]*)(=(false|true|[0-9]+(\.[0-9]+)?|\".*\"|\{.*\}))?/ig;
+		// let reg0 = /\$([a-z][a-z0-9]*)(=(false|true|[0-9]+(\.[0-9]+)?|\".*\"|\{.*\}))?/ig; // original
+		let reg0 = /^\$?(?<key>[a-z][a-z0-9]*)(?<decliration>\s?\:?=\s?(?<value>false|true|[0-9]+(\.[0-9]+)?|\".*\"|\'.*\'|\{.*\}))?$/ig;
 		let matches0: RegExpExecArray | null;
 		while (matches0 = reg0.exec(line)) {
 			if (matches0.length === 5) {
-
+				// console.log(matches0.groups);
 				let access: string | undefined;
 
-				const name = matches0[1];
+				// const name = matches0[1];
+				let key = matches0.groups?.key;
+				const name = key ? key : '';
 				const value = matches0[3];
 
 				let v = new RuntimeVariable(name, value);
 
 				if (value && value.length > 0) {
-
+					console.log('\nname: ' + name + ', value: ' + value);
 					if (value === 'true') {
 						v.value = true;
 					} else if (value === 'false') {
 						v.value = false;
-					} else if (value[0] === '"') {
+					} else if (value[0] === '"' || value[0] === '\'') {
 						v.value = value.slice(1, -1);
 					} else if (value[0] === '{') {
 						v.value = [
@@ -605,7 +608,7 @@ export class MockRuntime extends EventEmitter {
 		}
 
 		// if 'log(...)' found in source -> send argument to debug console
-		const reg1 = /(log|prio|out|err)\(([^\)]*)\)/g;
+		const reg1 = /(log|prio|out|err|OutputDebug)\(([^\)]*)\)/g;
 		let matches1: RegExpExecArray | null;
 		while (matches1 = reg1.exec(line)) {
 			if (matches1.length === 3) {

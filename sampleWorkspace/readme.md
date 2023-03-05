@@ -25,6 +25,13 @@ Writing to a variable is done with the `$variable=value` syntax. The format of t
 - Float: $f=3.14
 - Object: $o={abc}
 
+$x = 321
+$y=$x
+$y
+z := 'Hello ' + 'world!'
+c := false
+
+
 Variables are shown in the VARIABLES view under the "Locals" and "Globals" scopes whenever the debugger stops.
 In addition a variable's value is shown when hovering over a variable and VS Code's Inline Values features shows the value at the end of the line.
 

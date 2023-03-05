@@ -1,8 +1,29 @@
 // Place your settings in this file to overwrite default and user settings.
 {
     "files.exclude": {
-        "out": false // set this to true to hide the "out" folder with the compiled JS files
-    },
+		"**/.git": true,
+		"**/.svn": true,
+		"**/.hg": true,
+		"**/CVS": true,
+		"**/.DS_Store": true,
+		".eslintrc.json": true,
+		"package-lock.json": true,
+		"readme.md": true,
+		"yarn.lock": true,
+		".vscodeignore": true,
+		"images/mock-debug-icon.png": true,
+		"images/mock-debug.gif": true,
+		"out/": true,
+		"node_modules/": true,
+		"dist/": true,
+		".github/workflows/": true,
+		".github/": true,
+		"build/": true,
+		"CHANGELOG.md": true,
+		"LICENSE.txt": true,
+		"ThirdPartyNotices.txt": true,
+		".gitignore": true
+	},
     "search.exclude": {
         "out": true // set this to false to include "out" folder in search results
     },
@@ -10,5 +31,42 @@
     "typescript.tsc.autoDetect": "off",
 
     "git.branchProtection": ["main"],
-    "git.branchProtectionPrompt": "alwaysCommitToNewBranch"
+	"git.branchProtectionPrompt": "alwaysCommitToNewBranch",
+	"hidefiles.configurationType": "local",
+	"hidefiles.globalConfig": {
+		"profiles": [
+			{
+				"name": "Default",
+				"detail": "",
+				"description": "Test",
+				"hidden": [
+					".eslintrc.json",
+					"package-lock.json",
+					"readme.md",
+					"yarn.lock",
+					".vscodeignore",
+					"images/mock-debug-icon.png",
+					"images/mock-debug.gif",
+					"out/",
+					"node_modules/",
+					"dist/",
+					".github/workflows/",
+					".github/",
+					"build/",
+					"CHANGELOG.md",
+					"LICENSE.txt",
+					"ThirdPartyNotices.txt",
+					".gitignore"
+				]
+			},
+			{
+				"name": "Strict",
+				"detail": "Hide everything not immediately required",
+				"hidden": [
+					"$Default"
+				]
+			}
+		]
+	},
+	"hidefiles.selectedProfile": "Default"
 }
