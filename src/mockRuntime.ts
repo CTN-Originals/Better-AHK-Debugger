@@ -540,7 +540,6 @@ export class MockRuntime extends EventEmitter {
 	 * Returns true if execution sent out a stopped event and needs to stop.
 	 */
 	private executeLine(ln: number, reverse: boolean): boolean {
-
 		// first "execute" the instructions associated with this line and potentially hit instruction breakpoints
 		while (reverse ? this.instruction >= this.starts[ln] : this.instruction < this.ends[ln]) {
 			reverse ? this.instruction-- : this.instruction++;
@@ -552,37 +551,97 @@ export class MockRuntime extends EventEmitter {
 
 		const line = this.getLine(ln);
 
+		const isVariable = (word: string) => {
+			if (this.variables.has(word)) {
+				return this.variables.get(word)?.value;
+			}
+			return false;
+		};
+		const containsVariable = (line: string) => {
+			if (!this.variables || this.variables.size === 0) {
+				return false;
+			}
+			
+			let stringFilter = /(?<quotes>"|'|`).*?$quotes/g
+			let filteredLine = line.replace(stringFilter, '');
+			const words = filteredLine.split(' ');
+			
+			for (let i = 0; i < words.length; i++) {
+				const word = words[i];
+				// Check if the word is a variable
+				if (this.variables.has(word)) {
+					return true;
+				}
+			}
+			return false;
+		};
+		const replaceVariableValues = (line: string) => {
+			const words = line.split(' ');
+			let newLine = '';
+			for (let i = 0; i < words.length; i++) {
+				const word = words[i];
+				const variableValue = isVariable(word);
+				if (variableValue) {
+					newLine += `${variableValue} `;
+				} else {
+					newLine += `${word} `;
+				}
+			}
+			return newLine;
+		};
+
 		// find variable accesses
 		// let reg0 = /\$([a-z][a-z0-9]*)(=(false|true|[0-9]+(\.[0-9]+)?|\".*\"|\{.*\}))?/ig; // original
-		let reg0 = /^\$?(?<key>[a-z][a-z0-9]*)(?<decliration>\s?\:?=\s?(?<value>false|true|[0-9]+(\.[0-9]+)?|\".*\"|\'.*\'|\{.*\}))?$/ig;
+		let reg0 = /^(?<scope>global|local|static)?( )?(?<key>[a-z][a-z0-9]*)(?<decliration>( )?\:=\s?(?<value>.*))?$/igm;
 		let matches0: RegExpExecArray | null;
+		let matchList: any[] = [];
 		while (matches0 = reg0.exec(line)) {
-			if (matches0.length === 5) {
-				// console.log(matches0.groups);
+			if (matches0.length >= 5) {
+				matchList.push(matches0);
 				let access: string | undefined;
 
 				// const name = matches0[1];
-				let key = matches0.groups?.key;
-				const name = key ? key : '';
-				const value = matches0[3];
+				const name = matches0.groups?.key ? matches0.groups?.key : '';
+				let value = matches0.groups?.value ? matches0.groups?.value : '';
 
 				let v = new RuntimeVariable(name, value);
-
+				// console.log(containsVariable(value));
 				if (value && value.length > 0) {
-					console.log('\nname: ' + name + ', value: ' + value);
-					if (value === 'true') {
+					// console.log('\nname: ' + name + ', value: ' + value);
+					if (value === 'true' || false) {
 						v.value = true;
-					} else if (value === 'false') {
+					} 
+					else if (value === 'false') {
 						v.value = false;
-					} else if (value[0] === '"' || value[0] === '\'') {
+					} 
+					else if (value[0] === '"' || value[0] === '\'') {
 						v.value = value.slice(1, -1);
-					} else if (value[0] === '{') {
+					} 
+					else if (value[0] === '[') {
+						let arr: any[] = [];
+						value = value.replace(/\[|\]|\,/g, '');
+						value = replaceVariableValues(value);
+						console.log('value: ' + value);
+						let arrValues = value.split(' ');
+						for (let i = 0; i < arrValues.length; i++) {
+							if (arrValues[i] === '') {
+								continue;
+							}
+							arr.push(new RuntimeVariable(i.toString(), arrValues[i]));
+						}
+						v.value = arr;
+					}
+					else if (value[0] === '{') {
+						// todo parse json
 						v.value = [
 							new RuntimeVariable('fBool', true),
 							new RuntimeVariable('fInteger', 123),
 							new RuntimeVariable('fString', 'hello'),
 							new RuntimeVariable('flazyInteger', 321)
 						];
+					} 
+					else if (containsVariable(value)) {
+						v.value = replaceVariableValues(value);
 					} else {
 						v.value = parseFloat(value);
 					}
@@ -593,6 +652,7 @@ export class MockRuntime extends EventEmitter {
 					}
 					this.variables.set(name, v);
 				} else {
+					// console.log(line)
 					if (this.variables.has(name)) {
 						// variable must exist in order to trigger a read access
 						access = 'read';
@@ -606,13 +666,17 @@ export class MockRuntime extends EventEmitter {
 				}
 			}
 		}
+		// console.log(this.variables);
 
 		// if 'log(...)' found in source -> send argument to debug console
-		const reg1 = /(log|prio|out|err|OutputDebug)\(([^\)]*)\)/g;
+		const reg1 = /(?<call>log|prio|out|err|OutputDebug)\((?<arg1>[^\)]*)\)/g;
 		let matches1: RegExpExecArray | null;
 		while (matches1 = reg1.exec(line)) {
 			if (matches1.length === 3) {
-				this.sendEvent('output', matches1[1], matches1[2], this._sourceFile, ln, matches1.index);
+				console.log(matches1);
+				let call = matches1.groups?.call;
+				let msg = replaceVariableValues(matches1.groups?.arg1 || '');
+				this.sendEvent('output', call, msg, this._sourceFile, ln, matches1.index);
 			}
 		}
 

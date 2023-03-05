@@ -122,6 +122,7 @@ export class MockDebugSession extends LoggingDebugSession {
 			switch(type) {
 				case 'prio': category = 'important'; break;
 				case 'out': category = 'stdout'; break;
+				case 'OutputDebug': category = 'stdout'; break;
 				case 'err': category = 'stderr'; break;
 				default: category = 'console'; break;
 			}
